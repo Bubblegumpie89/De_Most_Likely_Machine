@@ -195,8 +195,8 @@ const HomePage = ({ onNext }) => (
       </p>
       <div className="w-full max-w-md h-64 bg-gray-300 rounded-lg mx-auto mb-12 shadow-lg overflow-hidden">
         <img
-          src="https.images.unsplash.com/photo-1664448288134-669f14c3ebbb?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt="Abstract algorithmic art"
+          src="images/2Machine" // [AANGEPAST]
+          alt="Machine" // [AANGEPAST]
           className="w-full h-full object-cover"
           onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
         />
@@ -275,8 +275,14 @@ const IntroductionPage = ({ onNext }) => (
       <p>
         Dit jaar delen we bij AGO de "most likely..."-awards uit.
       </p>
-      <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center">
-        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+      {/* [AANGEPAST] Plaatshouder vervangen door img-tag */}
+      <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md overflow-hidden">
+        <img
+          src="images/2Award" // [AANGEPAST]
+          alt="Award" // [AANGEPAST]
+          className="w-full h-full object-cover"
+          onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+        />
       </div>
       <p>
         Maar wat als deze voorspellingen door een machine werden gedaan?
@@ -862,7 +868,7 @@ const ResultsModal = ({ modalData, onClose }) => {
 
 
 // --- Results Page (Page 8) ---
-// --- [TRANSLATED & UPDATED] ---
+// --- [AANGEPAST] Afbeelding toegevoegd ---
 const ResultsPage = ({ onNext, selections, assignedTraits }) => {
   const [algorithmPicks, setAlgorithmPicks] = useState({
     viral: null,
@@ -924,10 +930,8 @@ const ResultsPage = ({ onNext, selections, assignedTraits }) => {
           {Object.keys(awardsConfig).map(key => {
             const userPick = getStudentById(selections[key]);
             const algorithmPick = algorithmPicks[key];
-            // const isMatch = userPick && algorithmPick && userPick.id === algorithmPick.id; // [VERWIJDERD]
 
             return (
-              // [AANGEPAST] 'isMatch' class is verwijderd
               <div key={key} className={`bg-white p-6 rounded-lg shadow-xl flex flex-col`}>
                 <h3 className="text-xl font-bold text-gray-800 mb-6 truncate">{resultsAwardTitles[key]}</h3>
                 <div className="space-y-4 text-left flex-grow">
@@ -939,10 +943,22 @@ const ResultsPage = ({ onNext, selections, assignedTraits }) => {
                     <h4 className="text-sm font-semibold text-gray-600">De keuze van je algoritme:</h4>
                     <p className="text-lg font-medium text-purple-600">{getStudentName(algorithmPick)}</p>
                   </div>
+
+                  {/* --- [START] NIEUWE AFBEELDING HIER --- */}
+                  {algorithmPick && (
+                    <div className="mt-4">
+                      <img
+                        src={studentImages[algorithmPick.id]}
+                        alt={algorithmPick.name}
+                        className="w-full h-40 object-cover rounded-md shadow-md"
+                        onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                      />
+                    </div>
+                  )}
+                  {/* --- [END] NIEUWE AFBEELDING HIER --- */}
+                  
                 </div>
                 
-                {/* [VERWIJDERD] Het "Het is een match!" blok is weg */}
-
                 {/* Learn Why Button */}
                 <button
                   onClick={() => handleLearnWhy(key)}
@@ -963,7 +979,7 @@ const ResultsPage = ({ onNext, selections, assignedTraits }) => {
 };
 
 // --- Reflection Page ---
-// --- [TRANSLATED] ---
+// --- [AANGEPAST] Tekst en structuur gewijzigd, extra placeholder toegevoegd ---
 const ReflectionPage = ({ onNext }) => (
   <PageContainer title="Reflectie">
     <div className="max-w-3xl mx-auto space-y-8 text-lg text-gray-700">
@@ -974,74 +990,83 @@ const ReflectionPage = ({ onNext }) => (
           Computer algoritmen kunnen fouten maken en oneerlijke resultaten creëren. Dit wordt algoritmische vooringenomenheid (bias) genoemd. Laten we drie redenen bekijken waarom algoritmen het soms mis hebben.
         </p>
 
-        <ol className="list-decimal list-outside space-y-8 pl-6">
-          
-          {/* Point 1 */}
-          <li className="space-y-2">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Algoritmen hebben niet alle informatie
-            </h3>
-            <p>
-              De 'Meest Waarschijnlijk' Machine weet alleen wat jij hem leert. Naast de kenmerken die jij hebt gekozen, kent het niet alle andere factoren die iemands persoonlijkheid vormen.
-            </p>
-            <p>
-              Algoritmen nemen beslissingen op basis van de gegevens die je met hen deelt. Deze onvolmaakte informatie kan algoritmen vooringenomen maken.
-            </p>
-          </li>
-          
-          {/* Point 2 */}
-          <li className="space-y-2">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Algoritmen weerspiegelen menselijke meningen
-            </h3>
-            <p>
-              Algoritmen zijn gebaseerd op de meningen van de mensen die ze creëren. Toen je de 'Meest Waarschijnlijk' Machine trainde, leerde je het om te denken zoals jij en jouw voorkeuren te volgen.
-            </p>
-            <p>
-              Omdat alle algoritmen door mensen worden gemaakt, is het onmogelijk om hun meningen te verwijderen uit de beslissingen die de algoritmen nemen. Deze meningen kunnen algoritmen ook vooringenomen maken.
-            </p>
-          </li>
-          
-          {/* Point 3 */}
-          <li className="space-y-2">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Algoritmen kunnen fouten herhalen en vermenigvuldigen
-            </h3>
-            <p>
-              Algoritmen herhalen hun instructies, dus herhalen en vermenigvuldigen ze ook hun fouten. De 'Meest Waarschijnlijk' Machine heeft 9 studenten gecategoriseerd, maar stel je voor dat je het gebruikt om iedereen op je school, in je stad of staat te categoriseren.
-            </p>
-            <p>
-              Zelfs één kleine fout in een algoritme kan een enorme impact hebben.
-            </p>
-          </li>
+        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+          <span className="text-gray-500">Afbeelding Plaatshouder</span>
+        </div>
+        
+        <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
+          Algoritmen hebben niet alle informatie
+        </h3>
+        <p>
+          De 'Most likely' machine weet alleen wat jij hem leert.
+        </p>
+        
+        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+          <span className="text-gray-500">Afbeelding Plaatshouder</span>
+        </div>
 
-        </ol>
+        <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
+          Algoritmen weerspiegelen menselijke meningen
+        </h3>
+        <p>
+          Algoritmen zijn gebaseerd op de meningen van de mensen die ze creëren. Toen je de 'Most likely' machine trainde, leerde je het om te denken zoals jij en jouw voorkeuren te volgen.
+        </p>
+        
+        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+          <span className="text-gray-500">Afbeelding Plaatshouder</span>
+        </div>
+
+        <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
+          Algoritmen kunnen fouten herhalen en vermenigvuldigen
+        </h3>
+        <p>
+          De 'Meest Waarschijnlijk' Machine heeft 9 studenten gecategoriseerd, maar stel je voor dat je het gebruikt om iedereen op het werk of in je stad te categoriseren.
+        </p>
+
+        {/* [NIEUW] Extra plaatshouder aan het einde toegevoegd */}
+        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+          <span className="text-gray-500">Afbeelding Plaatshouder</span>
+        </div>
       </div>
 
     </div>
   </PageContainer>
 );
 
-// --- [TRANSLATED] ---
+// --- [AANGEPAST] Tekst, titel en structuur gewijzigd ---
 const RecapPage = ({ onNext }) => (
-  <PageContainer title="Samenvatting">
-    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-xl">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Belangrijkste Punten</h2>
-      <ul className="list-disc list-inside space-y-4 text-gray-600 text-lg">
-        <li>
-          <strong>Algoritmen zijn hulpmiddelen die door mensen zijn gebouwd.</strong> Ze weerspiegelen de doelen, waarden en vooroordelen van hun makers.
-        </li>
-        <li>
-          <strong>Verschillende inputs en gewichten leiden tot verschillende uitkomsten.</strong> Een kleine wijziging in de regels van een algoritme kan een grote impact hebben op iemands leven.
-        </li>
-        <li>
-          <strong>"Eerlijkheid" is complex.</strong> Een algoritme dat op het eerste gezicht neutraal lijkt, kan nog steeds oneerlijke resultaten opleveren als de gegevens vooringenomen zijn.
-        </li>
-        <li>
-          <strong>Transparantie is cruciaal.</strong> Het is belangrijk om te vragen welke factoren een algoritme gebruikt en hoe het wordt "afgesteld".
-        </li>
-      </ul>
-      <div className="text-center mt-12">
+  <PageContainer title="Conclusie">
+    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-xl text-lg text-gray-700 space-y-4">
+      
+      <p>
+        <strong>Algoritmen zijn hulpmiddelen die door mensen zijn gebouwd.</strong> Ze weerspiegelen de doelen, waarden en vooroordelen van hun makers.
+      </p>
+      <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+      </div>
+
+      <p>
+        <strong>Verschillende inputs en gewichten leiden tot verschillende uitkomsten.</strong> Een kleine wijziging in de regels van een algoritme kan een grote impact hebben op het resultaat.
+      </p>
+      <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+      </div>
+
+      <p>
+        <strong>"Eerlijkheid" is complex.</strong> Een algoritme dat op het eerste gezicht neutraal lijkt, kan nog steeds oneerlijke resultaten opleveren als de gegevens vooringenomen zijn.
+      </p>
+      <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+      </div>
+
+      <p>
+        <strong>Transparantie is cruciaal.</strong> Het is belangrijk om jezelf de vraag te stellen welke factoren een algoritme gebruikt en hoe het wordt "afgesteld".
+      </p>
+      <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
+        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+      </div>
+      
+      <div className="text-center pt-8">
         <button
           onClick={() => onNext(0)} // Reset to first page
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-md hover:shadow-lg"
