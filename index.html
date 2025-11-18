@@ -443,6 +443,7 @@
             </div>
         );
 
+
         const AwardTraitDropZone = ({ awardKey, awardLabel, onDrop, onDragOver, children, isDragOver, traitCount, maxTraits }) => {
             const isFull = traitCount >= maxTraits;
             return (
@@ -470,9 +471,25 @@
             );
         };
 
-        const AssignedTraitPill = ({ trait }) => (
-            <div className="bg-white py-1 px-3 rounded-full shadow-md">
-                <span className="font-medium text-sm text-gray-700">{trait.name}</span>
+        // [NIEUWE COMPONENT] AssignedTraitCard
+        // Vervangt de AssignedTraitPill om de afbeelding te tonen en draggable te zijn.
+        const AssignedTraitCard = ({ trait, onDragStart }) => (
+            <div
+                draggable
+                onDragStart={onDragStart}
+                className="relative w-full h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200"
+            >
+                <img
+                    src={traitImages[trait.id]}
+                    alt={trait.name}
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                    onError={(e) => { e.target.src = 'https://placehold.co/150x80/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                    <span className="font-bold text-white text-center px-1 text-sm" style={{ textShadow: '1px 1px 2px black' }}>
+                        {trait.name}
+                    </span>
+                </div>
             </div>
         );
 
@@ -503,10 +520,21 @@
                 e.preventDefault();  
                 const targetZone = e.currentTarget.dataset.awardKey;
                 if (targetZone) {
+                    // Staat drop toe, zolang de limiet niet bereikt is, OF als we iets uit dezelfde zone verplaatsen (al is dat hier minder relevant)
                     if (assignedTraits[targetZone].length < MAX_TRAITS_PER_AWARD) {
                         setDragOverZone(targetZone);
                     } else {
-                        setDragOverZone(null);  
+                        // Als de zone vol is, maar we slepen iets dat al in deze zone zit?
+                        // Voor nu: als vol, geen drop indicator.
+                        // We kunnen evt controleren of het gesleepte item al in de doelzone zit.
+                        const traitId = parseInt(e.dataTransfer.getData("traitId") || draggedTrait?.id, 10);
+                        const isAlreadyHere = assignedTraits[targetZone].some(t => t.id === traitId);
+                        
+                        if (isAlreadyHere) {
+                             setDragOverZone(targetZone); // Toestaan om te herordenen (al doen we nu alleen append)
+                        } else {
+                             setDragOverZone(null);  
+                        }
                     }
                 }
             };
@@ -519,21 +547,63 @@
                 e.preventDefault();
                 setDragOverZone(null);  
                 const traitId = parseInt(e.dataTransfer.getData("traitId"), 10);
-                const awardKey = e.currentTarget.dataset.awardKey;
+                const targetAwardKey = e.currentTarget.dataset.awardKey;
 
-                if (!traitId || !awardKey || !draggedTrait) return;
+                if (!traitId || !targetAwardKey || !draggedTrait) return;
 
-                if (assignedTraits[awardKey].length >= MAX_TRAITS_PER_AWARD) {
-                    setDraggedTrait(null);
-                    return;  
+                // --- LOGICA AANGEPAST ---
+                
+                // 1. Zoek waar de kaart vandaan komt (Stack of een andere categorie)
+                let sourceCategory = null;
+                
+                // Check of het van de stapel komt (moet de bovenste zijn)
+                const isFromStack = currentTrait && traitId === currentTrait.id;
+
+                // Check of het uit een bestaande categorie komt
+                if (!isFromStack) {
+                    for (const key of Object.keys(assignedTraits)) {
+                        if (assignedTraits[key].some(t => t.id === traitId)) {
+                            sourceCategory = key;
+                            break;
+                        }
+                    }
                 }
 
-                if (currentTrait && traitId === currentTrait.id) {
+                // 2. Validatie: Mag het hier gedropt worden?
+                const targetList = assignedTraits[targetAwardKey];
+                const isAlreadyInTarget = targetList.some(t => t.id === traitId);
+                
+                // Als doel vol is EN het item zit er nog niet in -> stop
+                if (targetList.length >= MAX_TRAITS_PER_AWARD && !isAlreadyInTarget) {
+                    return; 
+                }
+
+                // 3. Voer verplaatsing uit
+                if (isFromStack) {
+                    // Van Stapel -> Categorie
                     setAssignedTraits(prev => ({
                         ...prev,
-                        [awardKey]: [...prev[awardKey], draggedTrait]
+                        [targetAwardKey]: [...prev[targetAwardKey], draggedTrait]
                     }));
                     setRemainingTraits(prev => prev.slice(0, -1));
+                } else if (sourceCategory) {
+                    // Van Categorie -> Categorie
+                    
+                    // Als bron en doel hetzelfde zijn, doen we (voorlopig) niks, of verplaatsen we naar achteren.
+                    if (sourceCategory === targetAwardKey) return;
+
+                    setAssignedTraits(prev => {
+                        // Verwijder uit bron
+                        const newSourceList = prev[sourceCategory].filter(t => t.id !== traitId);
+                        // Voeg toe aan doel
+                        const newTargetList = [...prev[targetAwardKey], draggedTrait];
+                        
+                        return {
+                            ...prev,
+                            [sourceCategory]: newSourceList,
+                            [targetAwardKey]: newTargetList
+                        };
+                    });
                 }
                 
                 setDraggedTrait(null);
@@ -596,8 +666,13 @@
                                 traitCount={assignedTraits[key].length}
                                 maxTraits={MAX_TRAITS_PER_AWARD}
                             >
+                                {/* [AANGEPAST] Gebruik nu AssignedTraitCard i.p.v. AssignedTraitPill */}
                                 {assignedTraits[key].map(trait => (
-                                    <AssignedTraitPill key={trait.id} trait={trait} />
+                                    <AssignedTraitCard 
+                                        key={trait.id} 
+                                        trait={trait} 
+                                        onDragStart={handleDragStart(trait)}
+                                    />
                                 ))}
                             </AwardTraitDropZone>
                         ))}
@@ -962,12 +1037,7 @@
                         </p>
 
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Data" 
-                                alt="Data bias example"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
+                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
                         </div>
                         
                         <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
@@ -978,12 +1048,7 @@
                         </p>
                         
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Opinion" 
-                                alt="Human opinion bias example"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
+                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
                         </div>
 
                         <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
@@ -994,12 +1059,7 @@
                         </p>
                         
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Multiply" 
-                                alt="Multiplying mistakes example"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
+                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
                         </div>
 
                         <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
@@ -1010,12 +1070,7 @@
                         </p>
                         
                          <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Future" 
-                                alt="Future impact"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
+                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
                         </div>
                     </div>
 
@@ -1031,48 +1086,28 @@
                         <strong>Algoritmen zijn hulpmiddelen die door mensen zijn gebouwd.</strong> Ze weerspiegelen de doelen, waarden en vooroordelen van hun makers.
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <img
-                            src="images/2Tools" 
-                            alt="Tools"
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                        />
+                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
                     </div>
 
                     <p>
                         <strong>Verschillende inputs en gewichten leiden tot verschillende uitkomsten.</strong> Een kleine wijziging in de regels van een algoritme kan een grote impact hebben op het resultaat.
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <img
-                            src="images/2Inputs" 
-                            alt="Inputs"
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                        />
+                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
                     </div>
 
                     <p>
                         <strong>"Eerlijkheid" is complex.</strong> Een algoritme dat op het eerste gezicht neutraal lijkt, kan nog steeds oneerlijke resultaten opleveren als de gegevens vooringenomen zijn.
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <img
-                            src="images/2Fairness" 
-                            alt="Fairness"
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                        />
+                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
                     </div>
 
                     <p>
                         <strong>Transparantie is cruciaal.</strong> Het is belangrijk om jezelf de vraag te stellen welke factoren een algoritme gebruikt en hoe het wordt "afgesteld".
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <img
-                            src="images/2Transparency" 
-                            alt="Transparency"
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                        />
+                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
                     </div>
                     
                     <div className="text-center pt-8">
