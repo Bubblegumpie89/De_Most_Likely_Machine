@@ -471,9 +471,27 @@
             );
         };
 
-        const AssignedTraitPill = ({ trait }) => (
-            <div className="bg-white py-1 px-3 rounded-full shadow-md">
-                <span className="font-medium text-sm text-gray-700">{trait.name}</span>
+        // --- Nieuwe Component: AssignedTraitCard ---
+        // Dit vervangt de 'AssignedTraitPill'. Het toont de afbeelding en is versleepbaar.
+        const AssignedTraitCard = ({ trait, onDragStart }) => (
+            <div
+                draggable
+                onDragStart={(e) => onDragStart(e, trait)}
+                className="relative w-full h-16 rounded-md shadow-md overflow-hidden cursor-grab active:cursor-grabbing group hover:ring-2 hover:ring-blue-400 transition-all"
+            >
+                {/* Achtergrondafbeelding */}
+                <img
+                    src={traitImages[trait.id]}
+                    alt={trait.name}
+                    className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    onError={(e) => { e.target.src = 'https://placehold.co/256x128/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                />
+                {/* Donkere overlay voor leesbaarheid tekst */}
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm text-center px-2 leading-tight shadow-black drop-shadow-md">
+                        {trait.name}
+                    </span>
+                </div>
             </div>
         );
 
@@ -481,6 +499,7 @@
             const [draggedTrait, setDraggedTrait] = useState(null);
             const [dragOverZone, setDragOverZone] = useState(null);
 
+            // Bereken de resterende kaarten voor de stapel
             const [remainingTraits, setRemainingTraits] = useState(() => {
                 const assignedIds = new Set([
                     ...assignedTraits.viral.map(t => t.id),
@@ -495,8 +514,10 @@
 
             const currentTrait = remainingTraits.length > 0 ? remainingTraits[remainingTraits.length - 1] : null;
 
-            const handleDragStart = (trait) => (e) => {
+            // Drag Start Handler: Werkt nu voor zowel de STAPEL als de CATEGORIEËN
+            const handleDragStart = (trait, sourceZone) => (e) => {
                 e.dataTransfer.setData("traitId", trait.id);
+                e.dataTransfer.setData("sourceZone", sourceZone); // 'stack' of 'viral', 'ceo', etc.
                 setDraggedTrait(trait);
             };
             
@@ -504,10 +525,12 @@
                 e.preventDefault();  
                 const targetZone = e.currentTarget.dataset.awardKey;
                 if (targetZone) {
+                    // Visuele feedback alleen als er nog plek is
                     if (assignedTraits[targetZone].length < MAX_TRAITS_PER_AWARD) {
                         setDragOverZone(targetZone);
-                    } else {
-                        setDragOverZone(null);  
+                    } else if (draggedTrait && e.dataTransfer.getData("sourceZone") !== targetZone) {
+                        // Als de zone vol is en we komen van elders, geen drop toestaan (visueel)
+                        setDragOverZone(null);
                     }
                 }
             };
@@ -519,21 +542,42 @@
             const handleDrop = (e) => {
                 e.preventDefault();
                 setDragOverZone(null);  
+                
                 const traitId = parseInt(e.dataTransfer.getData("traitId"), 10);
-                const awardKey = e.currentTarget.dataset.awardKey;
+                const sourceZone = e.dataTransfer.getData("sourceZone");
+                const targetZone = e.currentTarget.dataset.awardKey;
 
-                if (!traitId || !awardKey || !draggedTrait) return;
+                if (!traitId || !targetZone || !draggedTrait) return;
 
-                if (assignedTraits[awardKey].length >= MAX_TRAITS_PER_AWARD) {
+                // Als we droppen in dezelfde zone als waar we vandaan kwamen, doe niets
+                if (sourceZone === targetZone) {
                     setDraggedTrait(null);
-                    return;  
+                    return;
                 }
 
-                if (currentTrait && traitId === currentTrait.id) {
-                    setAssignedTraits(prev => ({
-                        ...prev,
-                        [awardKey]: [...prev[awardKey], draggedTrait]
-                    }));
+                // Check of de doelzone vol is
+                if (assignedTraits[targetZone].length >= MAX_TRAITS_PER_AWARD) {
+                    setDraggedTrait(null);
+                    return; 
+                }
+
+                // LOGICA: Verplaats de kaart
+                setAssignedTraits(prev => {
+                    const newState = { ...prev };
+
+                    // 1. Verwijder uit de bron (als het niet de stapel is)
+                    if (sourceZone !== 'stack') {
+                        newState[sourceZone] = newState[sourceZone].filter(t => t.id !== traitId);
+                    }
+
+                    // 2. Voeg toe aan het doel
+                    newState[targetZone] = [...newState[targetZone], draggedTrait];
+                    
+                    return newState;
+                });
+
+                // Als het van de stapel kwam, verwijder het daar
+                if (sourceZone === 'stack' && currentTrait && traitId === currentTrait.id) {
                     setRemainingTraits(prev => prev.slice(0, -1));
                 }
                 
@@ -548,10 +592,11 @@
             return (
                 <PageContainer title="Creëer het algoritme">
                     <p className="text-center text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-                        Nu gaan we jouw "algoritme" bouwen. Sleep elk kenmerk van de stapel en laat het vallen op de prijs waarvoor je denkt dat het het meest relevant is. Elke prijs heeft {MAX_TRAITS_PER_AWARD} kenmerken nodig.
+                        Nu gaan we jouw "algoritme" bouwen. Sleep elk kenmerk van de stapel naar een categorie. 
+                        Je kunt eigenschappen ook <strong>tussen categorieën verplaatsen</strong> als je van gedachten verandert.
                     </p>
 
-                    {/* Card Stack */}
+                    {/* Card Stack (De Stapel) */}
                     <div className="h-48 flex items-center justify-center relative mb-8">
                         {remainingTraits.length > 0 ? (
                             remainingTraits.map((trait, index) => {
@@ -569,14 +614,18 @@
                                     >
                                         <AlgorithmTraitCard
                                             trait={trait}
-                                            onDragStart={handleDragStart(trait)}
+                                            // Bron is hier 'stack'
+                                            onDragStart={handleDragStart(trait, 'stack')}
                                             isDraggable={isTopCard}
                                         />
                                     </div>
                                 );
                             })
                         ) : (
-                            <p className="text-xl text-gray-500">Alle kenmerken toegewezen! Ga naar de volgende pagina om je algoritme te verfijnen.</p>
+                            <div className="text-center">
+                                <p className="text-xl text-green-600 font-bold mb-2">Klaar!</p>
+                                <p className="text-gray-500">Je kunt nu eigenschappen herschikken tussen de kolommen of doorgaan.</p>
+                            </div>
                         )}
                     </div>
 
@@ -598,7 +647,14 @@
                                 maxTraits={MAX_TRAITS_PER_AWARD}
                             >
                                 {assignedTraits[key].map(trait => (
-                                    <AssignedTraitPill key={trait.id} trait={trait} />
+                                    // Hier gebruiken we de nieuwe Card component ipv de Pill
+                                    // Bron is hier de 'key' van de categorie (bv. 'viral')
+                                    <div key={trait.id} className="w-full sm:w-auto sm:flex-1 min-w-[45%]">
+                                        <AssignedTraitCard 
+                                            trait={trait} 
+                                            onDragStart={handleDragStart(trait, key)} 
+                                        />
+                                    </div>
                                 ))}
                             </AwardTraitDropZone>
                         ))}
