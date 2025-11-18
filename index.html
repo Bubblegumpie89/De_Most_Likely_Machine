@@ -32,7 +32,6 @@
         const { useState, useEffect } = React;
 
         // --- Data ---
-        // Mock data for the "Meet the Class" section
         const mockStudents = [
             { id: 1, name: 'Sophie V.' },
             { id: 2, name: 'Franky D.' },
@@ -607,32 +606,42 @@
             );
         };
 
-        const DraggableTraitItem = ({ trait, position, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDropTargetBefore, isDropTargetAfter }) => (
-            <div
+        const DraggableTraitItem = ({ trait, position, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDropTargetBefore, isDropTargetAfter }) => {
+            let borderClass = 'border-y-transparent';
+            if (isDropTargetBefore) {
+                borderClass = 'border-t-blue-500 border-b-transparent';
+            } else if (isDropTargetAfter) {
+                borderClass = 'border-b-blue-500 border-t-transparent';
+            }
+            
+            const containerClass = `
+                p-4 bg-white rounded-lg shadow-md flex items-center justify-between 
+                cursor-grab active:cursor-grabbing transition-colors duration-100 ease-in-out
+                ${isDragging ? 'opacity-50' : 'opacity-100'}
+                border-t-8 border-b-8 ${borderClass}
+            `;
+
+            return (
+              <div
                 draggable
                 onDragStart={onDragStart}
                 onDragOver={onDragOver}
                 onDrop={onDrop}
                 onDragEnd={onDragEnd}
                 data-trait-id={trait.id}
-                className={`p-4 bg-white rounded-lg shadow-md flex items-center justify-between cursor-grab active:cursor-grabbing transition-colors duration-100 ease-in-out
-                    ${isDragging ? 'opacity-50' : 'opacity-100'}
-                    border-t-8 border-b-8
-                    ${isDropTargetBefore ? 'border-t-blue-500' : 'border-t-transparent'}
-                    ${isDropTargetAfter ? 'border-b-blue-500' : 'border-b-transparent'}
-                    ${!isDropTargetBefore && !isDropTargetAfter ? 'border-y-transparent' : ''}
-                `}
-            >
+                className={containerClass}
+              >
                 <div className="flex items-center">
-                    <span className="font-bold text-lg text-blue-600 w-6 text-right mr-3">{position}.</span>
-                    <span className="font-medium text-gray-700">{trait.name}</span>
+                  <span className="font-bold text-lg text-blue-600 w-6 text-right mr-3">{position}.</span>
+                  <span className="font-medium text-gray-700">{trait.name}</span>
                 </div>
 
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                 </svg>
-            </div>
-        );
+              </div>
+            );
+        };
 
         const TuneAlgorithmPage = ({ onNext, assignedTraits, setAssignedTraits }) => {
             const [selectedAward, setSelectedAward] = useState(Object.keys(awardsConfig)[0]);  
@@ -953,7 +962,12 @@
                         </p>
 
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                            <img
+                                src="images/2Data" 
+                                alt="Data bias example"
+                                className="w-full h-full object-cover rounded-lg"
+                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                            />
                         </div>
                         
                         <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
@@ -964,7 +978,12 @@
                         </p>
                         
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                            <img
+                                src="images/2Opinion" 
+                                alt="Human opinion bias example"
+                                className="w-full h-full object-cover rounded-lg"
+                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                            />
                         </div>
 
                         <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
@@ -975,7 +994,12 @@
                         </p>
                         
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                            <img
+                                src="images/2Multiply" 
+                                alt="Multiplying mistakes example"
+                                className="w-full h-full object-cover rounded-lg"
+                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                            />
                         </div>
 
                         <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
@@ -986,7 +1010,12 @@
                         </p>
                         
                          <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                            <img
+                                src="images/2Future" 
+                                alt="Future impact"
+                                className="w-full h-full object-cover rounded-lg"
+                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                            />
                         </div>
                     </div>
 
@@ -1002,28 +1031,48 @@
                         <strong>Algoritmen zijn hulpmiddelen die door mensen zijn gebouwd.</strong> Ze weerspiegelen de doelen, waarden en vooroordelen van hun makers.
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                        <img
+                            src="images/2Tools" 
+                            alt="Tools"
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                        />
                     </div>
 
                     <p>
                         <strong>Verschillende inputs en gewichten leiden tot verschillende uitkomsten.</strong> Een kleine wijziging in de regels van een algoritme kan een grote impact hebben op het resultaat.
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                        <img
+                            src="images/2Inputs" 
+                            alt="Inputs"
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                        />
                     </div>
 
                     <p>
                         <strong>"Eerlijkheid" is complex.</strong> Een algoritme dat op het eerste gezicht neutraal lijkt, kan nog steeds oneerlijke resultaten opleveren als de gegevens vooringenomen zijn.
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                        <img
+                            src="images/2Fairness" 
+                            alt="Fairness"
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                        />
                     </div>
 
                     <p>
                         <strong>Transparantie is cruciaal.</strong> Het is belangrijk om jezelf de vraag te stellen welke factoren een algoritme gebruikt en hoe het wordt "afgesteld".
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                        <span className="text-gray-500">Afbeelding Plaatshouder</span>
+                        <img
+                            src="images/2Transparency" 
+                            alt="Transparency"
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
+                        />
                     </div>
                     
                     <div className="text-center pt-8">
