@@ -1045,21 +1045,38 @@
 
                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-8">
                              <img
-                                src="images/2Reflection" 
+                                src="images/2Balans" 
                                 alt="Reflectie"
                                 className="w-full h-full object-cover rounded-lg"
                                 onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
                         
-                        <ol className="list-decimal list-outside space-y-4 pl-6 font-semibold text-gray-800">
-                          <li>
-                            Welke uitslag voelt 'juister'?
-                          </li>
-                          <li>
-                            Als je gevoel zegt dat het algoritme fout zit, zit de fout dan in de formule waarmee de scores berekend worden of in de gegevens van de kandidaten?
-                          </li>
-                        </ol>
+                        <div className="space-y-6">
+                            {/* Vraag 1 */}
+                            <div className="flex items-start space-x-4 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-md">
+                                    1
+                                </div>
+                                <div className="flex items-center h-12">
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        Welke uitslag voelt 'juister'?
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Vraag 2 */}
+                            <div className="flex items-start space-x-4 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-md">
+                                    2
+                                </div>
+                                <div>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        Als je gevoel zegt dat het algoritme fout zit, zit de fout dan in de formule waarmee de scores berekend worden of in de gegevens van de kandidaten?
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -1075,8 +1092,8 @@
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
                         <img
-                            src="images/2Tools" 
-                            alt="Tools"
+                            src="images/2What" 
+                            alt="Wat zijn algoritmes"
                             className="w-full h-full object-cover rounded-lg"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
@@ -1087,8 +1104,8 @@
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
                         <img
-                            src="images/2Inputs" 
-                            alt="Inputs"
+                            src="images/2Used" 
+                            alt="Hoe worden ze gebruikt"
                             className="w-full h-full object-cover rounded-lg"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
@@ -1099,8 +1116,8 @@
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
                         <img
-                            src="images/2Fairness" 
-                            alt="Fairness"
+                            src="images/2Bias" 
+                            alt="Algoritmische bias"
                             className="w-full h-full object-cover rounded-lg"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
@@ -1111,8 +1128,8 @@
                     </p>
                     <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
                         <img
-                            src="images/2Transparency" 
-                            alt="Transparency"
+                            src="images/2Why" 
+                            alt="Waarom is het belangrijk"
                             className="w-full h-full object-cover rounded-lg"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
