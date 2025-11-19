@@ -425,7 +425,8 @@
             <div
                 draggable={isDraggable}
                 onDragStart={isDraggable ? onDragStart : null}
-                className={`w-64 h-32 rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
+                // [AANGEPAST] Breedte w-96 (384px) en hoogte h-48 (192px) voor grotere kaarten
+                className={`w-96 h-48 rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
             >
                 <img
                     src={traitImages[trait.id]}
@@ -624,7 +625,8 @@
                     </p>
 
                     {/* Card Stack */}
-                    <div className="h-48 flex items-center justify-center relative mb-8">
+                    // [AANGEPAST] Container verhoogd van h-48 naar h-64 voor grotere kaarten
+                    <div className="h-64 flex items-center justify-center relative mb-8">
                         {remainingTraits.length > 0 ? (
                             remainingTraits.map((trait, index) => {
                                 const isTopCard = index === remainingTraits.length - 1;
