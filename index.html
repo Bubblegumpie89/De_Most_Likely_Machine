@@ -187,6 +187,7 @@
             return scoredStudents.sort((a, b) => b.score - a.score);
         };
 
+
         // --- Page Components ---
 
         const PageContainer = ({ children, title, maxWidth = "max-w-5xl" }) => (
@@ -459,11 +460,12 @@
                     <div className="text-center font-medium text-gray-600 mb-4">
                         {traitCount} / {maxTraits} kenmerken
                     </div>
-                    <div className="space-y-2 flex flex-wrap gap-2 justify-center">
+                    {/* [AANGEPAST] grid-cols-3 */}
+                    <div className="grid grid-cols-3 gap-2 justify-center">
                         {children}
                     </div>
                     {isFull && (
-                        <div className="text-center text-green-700 font-semibold mt-4">
+                        <div className="text-center text-green-700 font-semibold mt-4 col-span-3">
                             Voltooid!
                         </div>
                     )}
@@ -615,7 +617,8 @@
             };
 
             return (
-                <PageContainer title="Creëer het algoritme">
+                // [AANGEPAST] Bredere container om de 3 kolommen per award te accommoderen
+                <PageContainer title="Creëer het algoritme" maxWidth="max-w-[1600px]">
                     <p className="text-center text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
                         Nu gaan we jouw "algoritme" bouwen. Sleep elk kenmerk van de stapel en laat het vallen op de prijs waarvoor je denkt dat het het meest relevant is. Elke prijs heeft {MAX_TRAITS_PER_AWARD} kenmerken nodig.
                     </p>
@@ -1031,67 +1034,32 @@
                 <div className="max-w-3xl mx-auto space-y-8 text-lg text-gray-700">
                     
                     <div className="bg-white p-8 rounded-lg shadow-xl">
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Hoe nauwkeurig was jouw algoritme?</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Intuïtie vs. Data</h2>
+                        
+                        <p className="mb-4">
+                          Op de pagina 'Voorspel de winnaars' kozen jullie op gevoel.
+                        </p>
                         <p className="mb-6">
-                            Computer algoritmen kunnen fouten maken en oneerlijke resultaten creëren. Dit wordt algoritmische vooringenomenheid (bias) genoemd. Laten we drie redenen bekijken waarom algoritmen het soms mis hebben.
+                          Bij 'De resultaten' kwam er een berekende winnaar uit.
                         </p>
 
-                        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Data" 
-                                alt="Data bias example"
+                        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-8">
+                             <img
+                                src="images/2Reflection" 
+                                alt="Reflectie"
                                 className="w-full h-full object-cover rounded-lg"
                                 onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
                         
-                        <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
-                            Algoritmen hebben niet alle informatie
-                        </h3>
-                        <p>
-                            De 'Most likely' machine weet alleen wat jij hem leert.
-                        </p>
-                        
-                        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Opinion" 
-                                alt="Human opinion bias example"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
-                        </div>
-
-                        <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
-                            Algoritmen weerspiegelen menselijke meningen
-                        </h3>
-                        <p>
-                            Algoritmen zijn gebaseerd op de meningen van de mensen die ze creëren. Toen je de 'Most likely' machine trainde, leerde je het om te denken zoals jij en jouw voorkeuren te volgen.
-                        </p>
-                        
-                        <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Multiply" 
-                                alt="Multiplying mistakes example"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
-                        </div>
-
-                        <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-2">
-                            Algoritmen kunnen fouten herhalen en vermenigvuldigen
-                        </h3>
-                        <p>
-                            De 'Meest Waarschijnlijk' Machine heeft 9 studenten gecategoriseerd, maar stel je voor dat je het gebruikt om iedereen op het werk of in je stad te categoriseren.
-                        </p>
-                        
-                         <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md flex items-center justify-center my-4">
-                            <img
-                                src="images/2Future" 
-                                alt="Future impact"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
-                            />
-                        </div>
+                        <ol className="list-decimal list-outside space-y-4 pl-6 font-semibold text-gray-800">
+                          <li>
+                            Welke uitslag voelt 'juister'?
+                          </li>
+                          <li>
+                            Als je gevoel zegt dat het algoritme fout zit, zit de fout dan in de formule waarmee de scores berekend worden of in de gegevens van de kandidaten?
+                          </li>
+                        </ol>
                     </div>
 
                 </div>
@@ -1284,12 +1252,6 @@
             return (
                 <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
                     <header className="bg-white shadow-sm sticky top-0 z-10">
-                        <div className="container mx-auto px-4 sm:px-8 max-w-5xl h-16 flex items-center">
-                            <h1 className="text-lg font-semibold text-gray-800">
-                                De 'most likely' machine
-                                <span className="text-base font-normal text-gray-500 ml-2">/ {titleCasePageTitle}</span>
-                            </h1>
-                        </div>
                     </header>
 
                     <main className="flex-grow">
