@@ -26,13 +26,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.MobileDragDrop) {
                 MobileDragDrop.polyfill({
-                    // Zorgt ervoor dat de drag image meescrolt/beweegt
-                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
-                    // [AANGEPAST] Houd 300ms vast om te slepen op mobiel (voorkomt conflict met scrollen)
-                    holdToDrag: 300 
+                    // Zorgt ervoor dat slepen soepeler verloopt op mobiel
+                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+                    // holdToDrag verwijderd voor directere respons
                 });
                 
-                // Fix voor iOS scroll gedrag
+                // Fix voor iOS scroll gedrag tijdens drag
                 window.addEventListener('touchmove', function() {}, {passive: false});
             }
         });
@@ -41,8 +40,8 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Voorkomt stuiteren op iOS, maar laat scrollen toe */
             overscroll-behavior-y: none; 
+            /* Voorkomt selectie van tekst/afbeeldingen tijdens interactie */
             -webkit-user-select: none;
             user-select: none;
         }
@@ -475,7 +474,8 @@
             <div
                 draggable={isDraggable}
                 onDragStart={isDraggable ? onDragStart : null}
-                className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
+                // [AANGEPAST] touch-none toegevoegd om scrollen op het element te voorkomen en slepen te forceren
+                className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group touch-none ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
             >
                 <img
                     src={traitImages[trait.id]}
@@ -524,12 +524,12 @@
         };
 
         // [NIEUWE COMPONENT] AssignedTraitCard
-        // Vervangt de AssignedTraitPill om de afbeelding te tonen en draggable te zijn.
         const AssignedTraitCard = ({ trait, onDragStart }) => (
             <div
                 draggable
                 onDragStart={onDragStart}
-                className="relative w-full h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200"
+                // [AANGEPAST] touch-none toegevoegd
+                className="relative w-full h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200 touch-none"
             >
                 <img
                     src={traitImages[trait.id]}
@@ -565,14 +565,9 @@
             const currentTrait = remainingTraits.length > 0 ? remainingTraits[remainingTraits.length - 1] : null;
 
             const handleDragStart = (trait) => (e) => {
-                // [AANGEPAST] Sla altijd op in state voor mobile/polyfill fallback
+                e.dataTransfer.setData("traitId", trait.id);
+                e.dataTransfer.effectAllowed = "move";
                 setDraggedTrait(trait);
-                
-                // Probeer dataTransfer te vullen voor desktop
-                if (e.dataTransfer) {
-                    e.dataTransfer.setData("traitId", trait.id);
-                    e.dataTransfer.effectAllowed = "move";
-                }
             };
             
             const handleDragOver = (e) => {
@@ -790,7 +785,7 @@
                 cursor-grab active:cursor-grabbing transition-colors duration-100 ease-in-out
                 ${isDragging ? 'opacity-50' : 'opacity-100'}
                 border-t-4 md:border-t-8 border-b-4 md:border-b-8 ${borderClass}
-                
+                touch-none
             `;
 
             return (
@@ -1387,6 +1382,12 @@
             return (
                 <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
                     <header className="bg-white shadow-sm sticky top-0 z-10">
+                        <div className="container mx-auto px-4 sm:px-8 max-w-5xl h-16 flex items-center">
+                           <h1 className="text-lg font-semibold text-gray-800">
+                             De 'most likely' machine
+                             <span className="text-base font-normal text-gray-500 ml-2">/ {titleCasePageTitle}</span>
+                           </h1>
+                        </div>
                     </header>
 
                     <main className="flex-grow">
