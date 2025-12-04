@@ -15,6 +15,28 @@
     <!-- Tailwind CSS laden voor de styling -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- [NIEUW] Mobile Drag & Drop Polyfill Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+
+    <!-- [NIEUW] Mobile Drag & Drop Polyfill Script -->
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+
+    <!-- [NIEUW] Initialiseer de Polyfill -->
+    <script>
+        // Wacht tot de polyfill geladen is en initialiseer hem dan
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.MobileDragDrop) {
+                MobileDragDrop.polyfill({
+                    // Zorgt ervoor dat je nog steeds kunt scrollen als je niet aan het slepen bent
+                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+                });
+                
+                // Fix voor scrollen op iOS apparaten tijdens draggen
+                window.addEventListener('touchmove', function() {}, {passive: false});
+            }
+        });
+    </script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -26,7 +48,7 @@
         .cursor-grabbing { cursor: grabbing; }
     </style>
 </head>
-<body class="bg-gray-50 text-slate-800">
+<body class="bg-gray-50">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -193,8 +215,8 @@
         // --- Page Components ---
 
         const PageContainer = ({ children, title, maxWidth = "max-w-5xl" }) => (
-            <div className={`flex-grow container mx-auto px-4 sm:px-6 py-6 md:py-12 ${maxWidth}`}>
-                <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-6 text-center">{title}</h1>
+            <div className={`flex-grow container mx-auto px-4 sm:px-8 py-12 ${maxWidth}`}>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8 text-center">{title}</h1>
                 {children}
             </div>
         );
@@ -202,13 +224,13 @@
         const HomePage = ({ onNext }) => (
             <PageContainer title="De 'most likely' machine">
                 <div className="text-center">
-                    <h3 className="text-xl md:text-2xl font-semibold text-gray-700 mb-4">
+                    <h3 className="text-2xl font-semibold text-gray-700 mb-4">
                         Word wijzer over algoritmen
                     </h3>
-                    <p className="text-sm md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto px-2">
+                    <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
                         Algoritmen drijven de wereld aan, maar ze kunnen fouten maken. Bouw je eigen algoritme en zie welke impact het heeft - ten goede en ten kwade.
                     </p>
-                    <div className="w-full max-w-md h-48 md:h-64 bg-gray-300 rounded-lg mx-auto mb-8 shadow-lg overflow-hidden">
+                    <div className="w-full max-w-md h-64 bg-gray-300 rounded-lg mx-auto mb-12 shadow-lg overflow-hidden">
                         <img
                             src="images/2Machine" 
                             alt="Machine"
@@ -218,7 +240,7 @@
                     </div>
                     <button
                         onClick={onNext}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-base md:text-lg transition duration-300 shadow-md hover:shadow-lg"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-md hover:shadow-lg"
                     >
                         Start
                     </button>
@@ -228,10 +250,10 @@
 
         const ObjectivesPage = ({ onNext }) => (
             <PageContainer title="Kom meer te weten over...">
-                <div className="bg-white p-4 md:p-8 rounded-lg shadow-xl flex flex-col md:flex-row justify-around items-start gap-6 md:gap-6">
+                <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col md:flex-row justify-around items-start gap-6">
                     
-                    <div className="text-center flex-1 w-full md:min-w-[150px]">
-                        <div className="w-full max-w-xs h-32 md:h-48 bg-gray-300 rounded-lg mx-auto mb-3 shadow-md flex items-center justify-center overflow-hidden">
+                    <div className="text-center flex-1 min-w-[150px]">
+                        <div className="w-full max-w-xs h-48 bg-gray-300 rounded-lg mx-auto mb-4 shadow-md flex items-center justify-center overflow-hidden">
                             <img
                                 src="images/2What"
                                 alt="What"
@@ -239,11 +261,11 @@
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
-                        <h2 className="text-lg md:text-2xl font-semibold text-gray-800">Wat zijn algoritmes?</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">Wat zijn algoritmes?</h2>
                     </div>
 
-                    <div className="text-center flex-1 w-full md:min-w-[150px]">
-                        <div className="w-full max-w-xs h-32 md:h-48 bg-gray-300 rounded-lg mx-auto mb-3 shadow-md flex items-center justify-center overflow-hidden">
+                    <div className="text-center flex-1 min-w-[150px]">
+                        <div className="w-full max-w-xs h-48 bg-gray-300 rounded-lg mx-auto mb-4 shadow-md flex items-center justify-center overflow-hidden">
                             <img
                                 src="images/2Used"
                                 alt="Used"
@@ -251,11 +273,11 @@
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
-                        <h2 className="text-lg md:text-2xl font-semibold text-gray-800">Waarvoor worden ze gebruikt?</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">Waarvoor worden ze gebruikt?</h2>
                     </div>
 
-                    <div className="text-center flex-1 w-full md:min-w-[150px]">
-                        <div className="w-full max-w-xs h-32 md:h-48 bg-gray-300 rounded-lg mx-auto mb-3 shadow-md flex items-center justify-center overflow-hidden">
+                    <div className="text-center flex-1 min-w-[150px]">
+                        <div className="w-full max-w-xs h-48 bg-gray-300 rounded-lg mx-auto mb-4 shadow-md flex items-center justify-center overflow-hidden">
                             <img
                                 src="images/2Bias"
                                 alt="Bias"
@@ -263,11 +285,11 @@
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
-                        <h2 className="text-lg md:text-2xl font-semibold text-gray-800">Wat is algoritmische bias?</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">Wat is algoritmische bias?</h2>
                     </div>
 
-                    <div className="text-center flex-1 w-full md:min-w-[150px]">
-                        <div className="w-full max-w-xs h-32 md:h-48 bg-gray-300 rounded-lg mx-auto mb-3 shadow-md flex items-center justify-center overflow-hidden">
+                    <div className="text-center flex-1 min-w-[150px]">
+                        <div className="w-full max-w-xs h-48 bg-gray-300 rounded-lg mx-auto mb-4 shadow-md flex items-center justify-center overflow-hidden">
                             <img
                                 src="images/2Why"
                                 alt="Why"
@@ -275,7 +297,7 @@
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
-                        <h2 className="text-lg md:text-2xl font-semibold text-gray-800">Waarom is het belangrijk?</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">Waarom is het belangrijk?</h2>
                     </div>
 
                 </div>
@@ -284,11 +306,11 @@
 
         const IntroductionPage = ({ onNext }) => (
             <PageContainer title="Opdracht">
-                <div className="max-w-3xl mx-auto space-y-4 md:space-y-6 text-sm md:text-lg text-gray-700">
+                <div className="max-w-3xl mx-auto space-y-6 text-lg text-gray-700">
                     <p>
                         Dit jaar delen we bij AGO de "most likely..."-awards uit.
                     </p>
-                    <div className="w-full h-40 md:h-56 bg-gray-300 rounded-lg shadow-md overflow-hidden">
+                    <div className="w-full h-56 bg-gray-300 rounded-lg shadow-md overflow-hidden">
                         <img
                             src="images/2Award" 
                             alt="Award" 
@@ -317,17 +339,17 @@
                 }));
 
             return (
-                <div className="bg-white rounded-lg shadow-lg p-3 md:p-4 relative transition-all duration-300 flex flex-col">
+                <div className="bg-white rounded-lg shadow-lg p-4 relative transition-all duration-300 flex flex-col">
                     <img
                         src={studentImages[student.id]}
                         alt={student.name}
-                        className="w-full aspect-square object-cover object-top rounded-md mb-3" 
+                        className="w-full h-40 object-cover rounded-md mb-4" 
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld+niet+gevonden'; e.target.onerror = null; }}
                     />
-                    <h3 className="font-bold text-base md:text-lg text-gray-800 mb-1">{student.name}</h3>
+                    <h3 className="font-bold text-lg text-gray-800 mb-2">{student.name}</h3>
                     <div className="flex-grow">
-                        <h4 className="font-semibold text-xs md:text-sm text-gray-500 mb-1">Topkenmerken:</h4>
-                        <ul className="text-xs md:text-sm text-gray-600 space-y-1">
+                        <h4 className="font-semibold text-sm text-gray-500 mb-2">Topkenmerken:</h4>
+                        <ul className="text-sm text-gray-600 space-y-1">
                             {topTraits.map((trait, index) => (
                                 <li key={trait.name} className="flex justify-between">
                                     <span>{trait.name}</span>
@@ -342,10 +364,10 @@
 
         const MeetTheClassPage = ({ onNext }) => (
             <PageContainer title="Maak kennis met de finalisten" maxWidth="max-w-7xl">
-                <p className="text-center text-sm md:text-lg text-gray-600 mb-6 md:mb-8 max-w-2xl mx-auto">
+                <p className="text-center text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
                     Je zit in het prijzencomité. Jouw taak is om de "Most likely..."-awards van dit jaar uit te reiken. Maak hieronder kennis met de 10 finalisten voordat je stemt.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
                     {mockStudents.map(student => (
                         <StudentCard key={student.id} student={student} />
                     ))}
@@ -365,15 +387,15 @@
             const selectedStudent = selectedId ? mockStudents.find(s => s.id === selectedId) : null;
 
             return (
-                <div className="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-6 md:mb-8">
-                    <label className="block text-lg md:text-xl font-semibold text-gray-800 mb-2 md:mb-4" htmlFor={`select-${awardKey}`}>
+                <div className="bg-white p-6 rounded-lg shadow-xl mb-8">
+                    <label className="block text-xl font-semibold text-gray-800 mb-4" htmlFor={`select-${awardKey}`}>
                         {awardLabel}
                     </label>
                     <select
                         id={`select-${awardKey}`}
                         value={selectedId || ''}
                         onChange={handleSelect}
-                        className="w-full p-2 md:p-3 border border-gray-300 rounded-lg text-base md:text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value="">Selecteer een kandidaat...</option>
                         {mockStudents.map(student => (
@@ -384,16 +406,16 @@
                     </select>
 
                     {selectedStudent && (
-                        <div className="mt-4 md:mt-6 p-3 md:p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
+                        <div className="mt-6 p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
                             <img
                                 src={studentImages[selectedStudent.id]}
                                 alt={selectedStudent.name}
-                                className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-md"
+                                className="w-20 h-20 object-cover rounded-md"
                                 onError={(e) => { e.target.src = 'https://placehold.co/100x100/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                             <div>
-                                <h4 className="font-bold text-base md:text-lg text-gray-800">{selectedStudent.name}</h4>
-                                <p className="text-sm md:text-base text-gray-600">Jouw intuïtieve keuze</p>
+                                <h4 className="font-bold text-lg text-gray-800">{selectedStudent.name}</h4>
+                                <p className="text-gray-600">Jouw intuïtieve keuze</p>
                             </div>
                         </div>
                     )}
@@ -404,7 +426,7 @@
         const PredictWinnersPage = ({ onNext, selections, setSelections }) => {
             return (
                 <PageContainer title="Voorspel de winnaars">
-                    <p className="text-center text-sm md:text-lg text-gray-600 mb-6 md:mb-8 max-w-2xl mx-auto">
+                    <p className="text-center text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
                         Selecteer op basis van je intuïtie één winnaar voor elke prijs met behulp van de dropdownmenu's hieronder.
                     </p>
                     
@@ -427,8 +449,7 @@
             <div
                 draggable={isDraggable}
                 onDragStart={isDraggable ? onDragStart : null}
-                // [AANGEPAST] Responsieve kaartgrootte. Mobiel: 100%, Desktop: vaste maat
-                className={`w-[85vw] h-[50vw] md:w-[36rem] md:h-[22rem] rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
+                className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
             >
                 <img
                     src={traitImages[trait.id]}
@@ -437,7 +458,7 @@
                     onError={(e) => { e.target.src = 'https://placehold.co/256x128/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <h3 className="font-bold text-2xl md:text-3xl text-white text-center p-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
+                    <h3 className="font-bold text-3xl text-white text-center p-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
                         {trait.name}
                     </h3>
                 </div>
@@ -455,19 +476,19 @@
                     onDrop={onDrop}
                     onDragOver={onDragOver}
                     data-award-key={awardKey}
-                    className={`w-full md:w-1/3 bg-gray-100 p-3 md:p-4 rounded-lg shadow-inner min-h-[8rem] md:min-h-[10rem] transition-colors ${
+                    className={`w-full md:w-1/3 bg-gray-100 p-4 rounded-lg shadow-inner min-h-[10rem] transition-colors ${
                         isDragOver && !isFull ? 'bg-blue-100 ring-2 ring-blue-500' : ''
                     } ${isFull ? 'bg-green-50 border-2 border-green-300' : 'border-2 border-transparent'}`}
                 >
-                    <h3 className="text-lg md:text-xl font-semibold text-gray-800 text-center mb-2">{awardLabel}</h3>
-                    <div className="text-center font-medium text-sm text-gray-600 mb-4">
+                    <h3 className="text-xl font-semibold text-gray-800 text-center mb-2">{awardLabel}</h3>
+                    <div className="text-center font-medium text-gray-600 mb-4">
                         {traitCount} / {maxTraits} kenmerken
                     </div>
-                    <div className="grid grid-cols-3 gap-1 md:gap-2 justify-center">
+                    <div className="grid grid-cols-3 gap-2 justify-center">
                         {children}
                     </div>
                     {isFull && (
-                        <div className="text-center text-green-700 font-semibold mt-4 col-span-3 text-sm">
+                        <div className="text-center text-green-700 font-semibold mt-4 col-span-3">
                             Voltooid!
                         </div>
                     )}
@@ -475,12 +496,13 @@
             );
         };
 
-        // [AANGEPAST] Kleinere kaartjes voor in de dropzones op mobiel
+        // [NIEUWE COMPONENT] AssignedTraitCard
+        // Vervangt de AssignedTraitPill om de afbeelding te tonen en draggable te zijn.
         const AssignedTraitCard = ({ trait, onDragStart }) => (
             <div
                 draggable
                 onDragStart={onDragStart}
-                className="relative w-full h-14 md:h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200"
+                className="relative w-full h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200"
             >
                 <img
                     src={traitImages[trait.id]}
@@ -489,7 +511,7 @@
                     onError={(e) => { e.target.src = 'https://placehold.co/150x80/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                    <span className="font-bold text-white text-center px-1 text-[10px] md:text-sm break-all leading-tight" style={{ textShadow: '1px 1px 2px black' }}>
+                    <span className="font-bold text-white text-center px-1 text-[10px] md:text-sm leading-none break-words" style={{ textShadow: '1px 1px 2px black' }}>
                         {trait.name}
                     </span>
                 </div>
@@ -626,7 +648,7 @@
 
                     {/* Card Stack */}
                     
-                    <div className="h-[55vw] md:h-[26rem] flex items-center justify-center relative mb-6 md:mb-8">
+                    <div className="h-[26rem] flex items-center justify-center relative mb-8">
                         {remainingTraits.length > 0 ? (
                             remainingTraits.map((trait, index) => {
                                 const isTopCard = index === remainingTraits.length - 1;
@@ -650,7 +672,7 @@
                                 );
                             })
                         ) : (
-                            <p className="text-lg text-gray-500">Alle kenmerken toegewezen! Ga naar de volgende pagina om je algoritme te verfijnen.</p>
+                            <p className="text-xl text-gray-500">Alle kenmerken toegewezen! Ga naar de volgende pagina om je algoritme te verfijnen.</p>
                         )}
                     </div>
 
