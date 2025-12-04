@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>De 'most likely' machine</title>
     
     <!-- React en ReactDOM laden via CDN -->
@@ -21,20 +21,26 @@
     <!-- Mobile Drag & Drop Polyfill Script -->
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
 
-    <!-- Initialiseer de Polyfill -->
+    <!-- Initialiseer de Polyfill DIRECT (buiten React) -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.MobileDragDrop) {
-                MobileDragDrop.polyfill({
-                    // Zorgt ervoor dat slepen soepeler verloopt op mobiel
-                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
-                    // holdToDrag verwijderd voor directere respons
-                });
-                
-                // Fix voor iOS scroll gedrag tijdens drag
-                window.addEventListener('touchmove', function() {}, {passive: false});
+        // Opties voor de polyfill
+        var polyfillOptions = {
+            // Zorgt ervoor dat de drag image meescrolt/beweegt
+            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+        };
+
+        // Activeer de polyfill
+        MobileDragDrop.polyfill(polyfillOptions);
+
+        // Fix voor iOS: voorkom dat de pagina beweegt/scrollt als je een draggable item vasthebt
+        window.addEventListener('touchmove', function(e) {
+            // Als we een element aanraken dat draggable is, blokkeer de standaard scroll
+            /*
+            if (e.target.closest('[draggable="true"]')) {
+                 e.preventDefault();
             }
-        });
+            */
+        }, {passive: false});
     </script>
 
     <style>
@@ -63,6 +69,11 @@
             opacity: 1 !important;
             transform: scale(1.05);
         }
+
+        /* CRUCIAAL VOOR MOBIEL: Blokkeer browser-handling (scrollen/zoomen) op de sleepbare kaarten */
+        .touch-none {
+            touch-action: none;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-slate-800">
@@ -70,7 +81,10 @@
 
     <script type="text/babel">
         // We halen useState en useEffect uit het globale React object
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
+
+        // Globale variabele als fallback voor mobiele dataTransfer issues
+        let GLOBAL_DRAG_DATA = null;
 
         // --- Data ---
         const mockStudents = [
@@ -473,8 +487,8 @@
         const AlgorithmTraitCard = ({ trait, onDragStart, isDraggable }) => (
             <div
                 draggable={isDraggable}
-                onDragStart={isDraggable ? onDragStart : null}
-                // [AANGEPAST] touch-none toegevoegd om scrollen op het element te voorkomen en slepen te forceren
+                onDragStart={onDragStart}
+                // [AANGEPAST] touch-none zodat browser niet probeert te scrollen bij aanraking van dit element
                 className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group touch-none ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
             >
                 <img
@@ -565,35 +579,32 @@
             const currentTrait = remainingTraits.length > 0 ? remainingTraits[remainingTraits.length - 1] : null;
 
             const handleDragStart = (trait) => (e) => {
-                e.dataTransfer.setData("traitId", trait.id);
-                e.dataTransfer.effectAllowed = "move";
+                // [AANGEPAST] Gebruik ook de globale variabele als robuuste fallback voor mobiel
+                GLOBAL_DRAG_DATA = trait;
+                
                 setDraggedTrait(trait);
+                
+                if (e.dataTransfer) {
+                    e.dataTransfer.setData("traitId", trait.id);
+                    e.dataTransfer.effectAllowed = "move";
+                }
             };
             
             const handleDragOver = (e) => {
                 e.preventDefault();  
                 const targetZone = e.currentTarget.dataset.awardKey;
                 if (targetZone) {
-                    // Staat drop toe, zolang de limiet niet bereikt is, OF als we iets uit dezelfde zone verplaatsen (al is dat hier minder relevant)
                     if (assignedTraits[targetZone].length < MAX_TRAITS_PER_AWARD) {
                         setDragOverZone(targetZone);
                     } else {
-                        // Als de zone vol is, maar we slepen iets dat al in deze zone zit?
-                        // Voor nu: als vol, geen drop indicator.
-                        // We kunnen evt controleren of het gesleepte item al in de doelzone zit.
-                        
-                        // [AANGEPAST] Probeer data op te halen met fallback naar state
-                        let traitId;
-                        if (e.dataTransfer) {
-                             const dtId = e.dataTransfer.getData("traitId");
-                             if (dtId) traitId = parseInt(dtId, 10);
-                        }
-                        if (!traitId && draggedTrait) traitId = draggedTrait.id;
+                        // [AANGEPAST] Gebruik state OF globale variabele
+                        const traitToCheck = draggedTrait || GLOBAL_DRAG_DATA;
+                        const traitId = traitToCheck ? traitToCheck.id : null;
 
                         const isAlreadyHere = traitId && assignedTraits[targetZone].some(t => t.id === traitId);
                         
                         if (isAlreadyHere) {
-                             setDragOverZone(targetZone); // Toestaan om te herordenen (al doen we nu alleen append)
+                             setDragOverZone(targetZone); 
                         } else {
                              setDragOverZone(null);  
                         }
@@ -609,82 +620,86 @@
                 e.preventDefault();
                 setDragOverZone(null);  
                 
-                // [AANGEPAST] Robuustere ID retrieval voor mobile/polyfill
-                let traitId;
+                const targetAwardKey = e.currentTarget.dataset.awardKey;
+                if (!targetAwardKey) return;
+
+                // [AANGEPAST] Meerdere manieren om data op te halen (dataTransfer > state > global var)
+                let traitObject = null;
+
+                // 1. Probeer dataTransfer (desktop)
                 if (e.dataTransfer) {
                     const dtId = e.dataTransfer.getData("traitId");
-                    if (dtId) traitId = parseInt(dtId, 10);
+                    if (dtId) {
+                         const id = parseInt(dtId, 10);
+                         // Zoek het object erbij
+                         if (currentTrait && currentTrait.id === id) traitObject = currentTrait;
+                         else {
+                             // Zoek in reeds toegewezen
+                             for (const key of Object.keys(assignedTraits)) {
+                                const found = assignedTraits[key].find(t => t.id === id);
+                                if (found) { traitObject = found; break; }
+                             }
+                             // Zoek in remaining als fallback (zou currentTrait moeten zijn)
+                             if (!traitObject) {
+                                 const found = remainingTraits.find(t => t.id === id);
+                                 if (found) traitObject = found;
+                             }
+                         }
+                    }
                 }
-                // Fallback naar state als dataTransfer leeg is
-                if (!traitId && draggedTrait) {
-                    traitId = draggedTrait.id;
+
+                // 2. Probeer state (vaak goed, maar soms oud bij snelle acties)
+                if (!traitObject && draggedTrait) {
+                    traitObject = draggedTrait;
                 }
 
-                const targetAwardKey = e.currentTarget.dataset.awardKey;
-
-                if (!traitId || !targetAwardKey) return;
-
-                // We moeten het object vinden op basis van ID, want draggedTrait kan oud zijn als we snel achter elkaar slepen? 
-                // Nee, draggedTrait state is betrouwbaar voor de huidige actie. 
-                // Maar als we tussen lijsten slepen, moeten we het object misschien uit de source list halen.
+                // 3. Probeer global (laatste redmiddel voor mobiele polyfills die state/events strippen)
+                if (!traitObject && GLOBAL_DRAG_DATA) {
+                    traitObject = GLOBAL_DRAG_DATA;
+                }
                 
-                let traitObject = null;
+                if (!traitObject) return; 
+
+                const traitId = traitObject.id;
+
+                // --- LOGICA VERVOLG ---
+                
                 let sourceCategory = null;
                 let isFromStack = false;
-                
-                // --- LOGICA AANGEPAST ---
-                
-                // Check of het van de stapel komt (moet de bovenste zijn)
+
+                // Check of het van de stapel komt
+                // (We vergelijken ID's omdat object-referenties soms anders zijn door re-renders)
                 if (currentTrait && currentTrait.id === traitId) {
                     isFromStack = true;
-                    traitObject = currentTrait;
-                } 
-                // Check of het uit een bestaande categorie komt
-                else {
+                } else {
                     for (const key of Object.keys(assignedTraits)) {
-                        const found = assignedTraits[key].find(t => t.id === traitId);
-                        if (found) {
+                        if (assignedTraits[key].some(t => t.id === traitId)) {
                             sourceCategory = key;
-                            traitObject = found; // Zeker weten dat we het juiste object hebben
                             break;
                         }
                     }
                 }
-                
-                // Fallback: als we het object nog niet hebben, kijk in de state (voor de zekerheid)
-                if (!traitObject && draggedTrait && draggedTrait.id === traitId) {
-                    traitObject = draggedTrait;
-                }
 
-                if (!traitObject) return; // Zou niet mogen gebeuren
-
-                // 2. Validatie: Mag het hier gedropt worden?
+                // 2. Validatie
                 const targetList = assignedTraits[targetAwardKey];
                 const isAlreadyInTarget = targetList.some(t => t.id === traitId);
                 
-                // Als doel vol is EN het item zit er nog niet in -> stop
                 if (targetList.length >= MAX_TRAITS_PER_AWARD && !isAlreadyInTarget) {
                     return; 
                 }
 
-                // 3. Voer verplaatsing uit
+                // 3. Uitvoeren
                 if (isFromStack) {
-                    // Van Stapel -> Categorie
                     setAssignedTraits(prev => ({
                         ...prev,
                         [targetAwardKey]: [...prev[targetAwardKey], traitObject]
                     }));
                     setRemainingTraits(prev => prev.slice(0, -1));
                 } else if (sourceCategory) {
-                    // Van Categorie -> Categorie
-                    
-                    // Als bron en doel hetzelfde zijn, doen we (voorlopig) niks, of verplaatsen we naar achteren.
                     if (sourceCategory === targetAwardKey) return;
 
                     setAssignedTraits(prev => {
-                        // Verwijder uit bron
                         const newSourceList = prev[sourceCategory].filter(t => t.id !== traitId);
-                        // Voeg toe aan doel
                         const newTargetList = [...prev[targetAwardKey], traitObject];
                         
                         return {
@@ -696,15 +711,17 @@
                 }
                 
                 setDraggedTrait(null);
+                GLOBAL_DRAG_DATA = null; // Reset global
             };
             
             const handleDragEnd = () => {
                 setDraggedTrait(null);
                 setDragOverZone(null);
+                GLOBAL_DRAG_DATA = null;
             };
 
             return (
-                // [AANGEPAST] Bredere container om de 3 kolommen per award te accommoderen, maar responsief
+                // [AANGEPAST] Bredere container
                 <PageContainer title="Creëer het algoritme" maxWidth="max-w-[1600px]">
                     <p className="text-center text-sm md:text-lg text-gray-600 mb-6 md:mb-8 max-w-2xl mx-auto">
                         Nu gaan we jouw "algoritme" bouwen. Sleep elk kenmerk van de stapel en laat het vallen op de prijs waarvoor je denkt dat het het meest relevant is. Elke prijs heeft {MAX_TRAITS_PER_AWARD} kenmerken nodig.
@@ -757,7 +774,6 @@
                                 traitCount={assignedTraits[key].length}
                                 maxTraits={MAX_TRAITS_PER_AWARD}
                             >
-                                {/* [AANGEPAST] Gebruik nu AssignedTraitCard i.p.v. AssignedTraitPill */}
                                 {assignedTraits[key].map(trait => (
                                     <AssignedTraitCard 
                                         key={trait.id} 
@@ -1382,12 +1398,6 @@
             return (
                 <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
                     <header className="bg-white shadow-sm sticky top-0 z-10">
-                        <div className="container mx-auto px-4 sm:px-8 max-w-5xl h-16 flex items-center">
-                           <h1 className="text-lg font-semibold text-gray-800">
-                             De 'most likely' machine
-                             <span className="text-base font-normal text-gray-500 ml-2">/ {titleCasePageTitle}</span>
-                           </h1>
-                        </div>
                     </header>
 
                     <main className="flex-grow">
