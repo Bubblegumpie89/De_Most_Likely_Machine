@@ -15,23 +15,22 @@
     <!-- Tailwind CSS laden voor de styling -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- [NIEUW] Mobile Drag & Drop Polyfill Styles -->
+    <!-- Mobile Drag & Drop Polyfill Styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
 
-    <!-- [NIEUW] Mobile Drag & Drop Polyfill Script -->
+    <!-- Mobile Drag & Drop Polyfill Script -->
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
 
-    <!-- [NIEUW] Initialiseer de Polyfill -->
+    <!-- Initialiseer de Polyfill -->
     <script>
-        // Wacht tot de polyfill geladen is en initialiseer hem dan
         document.addEventListener('DOMContentLoaded', function() {
             if (window.MobileDragDrop) {
                 MobileDragDrop.polyfill({
-                    // Zorgt ervoor dat je nog steeds kunt scrollen als je niet aan het slepen bent
+                    // Zorgt ervoor dat slepen soepeler verloopt op mobiel
                     dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
                 });
                 
-                // Fix voor scrollen op iOS apparaten tijdens draggen
+                // Fix voor iOS scroll gedrag tijdens drag
                 window.addEventListener('touchmove', function() {}, {passive: false});
             }
         });
@@ -40,15 +39,27 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Voorkomt "bounce" effect op iOS tijdens slepen */
             overscroll-behavior-y: none; 
+            /* Voorkomt selectie van tekst/afbeeldingen tijdens interactie */
+            -webkit-user-select: none;
+            user-select: none;
         }
-        /* Voorkom selectie tijdens slepen */
+        /* Zorgt dat afbeeldingen nergens standaard versleepbaar zijn (ghost images) */
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
+            pointer-events: none; /* Standaard geen interactie, tenzij specifiek aangezet */
+        }
+        /* Specifieke interactieve elementen herstellen */
+        button img, .card-img {
+            pointer-events: auto;
+        }
+
         .cursor-grab { cursor: grab; }
         .cursor-grabbing { cursor: grabbing; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 text-slate-800">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -235,6 +246,7 @@
                             src="images/2Machine" 
                             alt="Machine"
                             className="w-full h-full object-cover"
+                            draggable="false"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
                     </div>
@@ -258,6 +270,7 @@
                                 src="images/2What"
                                 alt="What"
                                 className="w-full h-full object-cover"
+                                draggable="false"
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
@@ -270,6 +283,7 @@
                                 src="images/2Used"
                                 alt="Used"
                                 className="w-full h-full object-cover"
+                                draggable="false"
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
@@ -282,6 +296,7 @@
                                 src="images/2Bias"
                                 alt="Bias"
                                 className="w-full h-full object-cover"
+                                draggable="false"
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
@@ -294,6 +309,7 @@
                                 src="images/2Why"
                                 alt="Why"
                                 className="w-full h-full object-cover"
+                                draggable="false"
                                 onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
@@ -315,6 +331,7 @@
                             src="images/2Award" 
                             alt="Award" 
                             className="w-full h-full object-cover"
+                            draggable="false"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
                     </div>
@@ -343,7 +360,8 @@
                     <img
                         src={studentImages[student.id]}
                         alt={student.name}
-                        className="w-full h-40 object-cover rounded-md mb-4" 
+                        className="w-full h-40 object-cover rounded-md mb-4 card-img" 
+                        draggable="false"
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300/e2e8f0/64748b?text=Beeld+niet+gevonden'; e.target.onerror = null; }}
                     />
                     <h3 className="font-bold text-lg text-gray-800 mb-2">{student.name}</h3>
@@ -411,6 +429,7 @@
                                 src={studentImages[selectedStudent.id]}
                                 alt={selectedStudent.name}
                                 className="w-20 h-20 object-cover rounded-md"
+                                draggable="false"
                                 onError={(e) => { e.target.src = 'https://placehold.co/100x100/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                             <div>
@@ -455,6 +474,7 @@
                     src={traitImages[trait.id]}
                     alt={trait.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    draggable="false"
                     onError={(e) => { e.target.src = 'https://placehold.co/256x128/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -508,10 +528,11 @@
                     src={traitImages[trait.id]}
                     alt={trait.name}
                     className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                    draggable="false"
                     onError={(e) => { e.target.src = 'https://placehold.co/150x80/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                    <span className="font-bold text-white text-center px-1 text-[10px] md:text-sm leading-none break-words" style={{ textShadow: '1px 1px 2px black' }}>
+                    <span className="font-bold text-white text-center px-1 text-sm" style={{ textShadow: '1px 1px 2px black' }}>
                         {trait.name}
                     </span>
                 </div>
@@ -571,7 +592,10 @@
             const handleDrop = (e) => {
                 e.preventDefault();
                 setDragOverZone(null);  
-                const traitId = parseInt(e.dataTransfer.getData("traitId"), 10);
+                
+                // Fallback to state if dataTransfer is empty (common on mobile/polyfills)
+                const traitIdStr = e.dataTransfer.getData("traitId");
+                const traitId = traitIdStr ? parseInt(traitIdStr, 10) : draggedTrait?.id;
                 const targetAwardKey = e.currentTarget.dataset.awardKey;
 
                 if (!traitId || !targetAwardKey || !draggedTrait) return;
@@ -780,7 +804,11 @@
             const handleDrop = (e) => {
                 e.preventDefault();
                 
-                if (!dropIndicator.targetId || !draggedTraitId || dropIndicator.targetId === draggedTraitId) {
+                // Fallback for polyfill
+                const traitIdStr = e.dataTransfer.getData("traitId");
+                const traitId = traitIdStr ? parseInt(traitIdStr, 10) : draggedTraitId;
+
+                if (!dropIndicator.targetId || !traitId || dropIndicator.targetId === traitId) {
                     setDraggedTraitId(null);
                     setDropIndicator({ targetId: null, position: 'before' });
                     return;
@@ -788,7 +816,7 @@
 
                 const currentTraits = [...assignedTraits[selectedAward]];
                 
-                const draggedIndex = currentTraits.findIndex(t => t.id === draggedTraitId);
+                const draggedIndex = currentTraits.findIndex(t => t.id === traitId);
                 if (draggedIndex === -1) {
                     setDraggedTraitId(null);
                     setDropIndicator({ targetId: null, position: 'before' });
@@ -1025,6 +1053,7 @@
                                                         src={studentImages[algorithmPick.id]}
                                                         alt={algorithmPick.name}
                                                         className="w-full aspect-square object-cover object-top rounded-md shadow-md" 
+                                                        draggable="false"
                                                         onError={(e) => { e.target.src = 'https://placehold.co/400x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                                                     />
                                                 </div>
@@ -1072,6 +1101,7 @@
                                 src="images/2Balans" 
                                 alt="Reflectie"
                                 className="w-full h-full object-cover rounded-lg"
+                                draggable="false"
                                 onError={(e) => { e.target.src = 'https://placehold.co/600x400/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                             />
                         </div>
@@ -1119,6 +1149,7 @@
                             src="images/2What" 
                             alt="Tools"
                             className="w-full aspect-square object-cover"
+                            draggable="false"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
                     </div>
@@ -1131,6 +1162,7 @@
                             src="images/2Used" 
                             alt="Inputs"
                             className="w-full aspect-square object-cover"
+                            draggable="false"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
                     </div>
@@ -1143,6 +1175,7 @@
                             src="images/2Bias" 
                             alt="Fairness"
                             className="w-full aspect-square object-cover"
+                            draggable="false"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
                     </div>
@@ -1155,6 +1188,7 @@
                             src="images/2Why" 
                             alt="Transparency"
                             className="w-full aspect-square object-cover"
+                            draggable="false"
                             onError={(e) => { e.target.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=Beeld'; e.target.onerror = null; }}
                         />
                     </div>
