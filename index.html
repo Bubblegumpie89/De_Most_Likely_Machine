@@ -21,37 +21,30 @@
     <!-- Mobile Drag & Drop Polyfill Script -->
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
 
-    <!-- Initialiseer de Polyfill DIRECT (buiten React) -->
+    <!-- Initialiseer de Polyfill -->
     <script>
-        // Opties voor de polyfill
-        var polyfillOptions = {
-            // Zorgt ervoor dat de drag image meescrolt/beweegt
-            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
-        };
-
-        // Activeer de polyfill
-        MobileDragDrop.polyfill(polyfillOptions);
-
-        // Fix voor iOS: voorkom dat de pagina beweegt/scrollt als je een draggable item vasthebt
-        window.addEventListener('touchmove', function(e) {
-            // Als we een element aanraken dat draggable is, blokkeer de standaard scroll
-            /*
-            if (e.target.closest('[draggable="true"]')) {
-                 e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.MobileDragDrop) {
+                MobileDragDrop.polyfill({
+                    // Zorgt ervoor dat slepen soepeler verloopt op mobiel
+                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+                    // Forceer dat de drag start na een korte aanraking, helpt bij onderscheid met scrollen
+                    holdToDrag: 100 
+                });
+                
+                // Fix voor iOS scroll gedrag tijdens drag
+                window.addEventListener('touchmove', function() {}, {passive: false});
             }
-            */
-        }, {passive: false});
+        });
     </script>
 
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overscroll-behavior-y: none; 
-            /* Voorkomt selectie van tekst/afbeeldingen tijdens interactie */
             -webkit-user-select: none;
             user-select: none;
         }
-        /* Zorgt dat afbeeldingen nergens standaard versleepbaar zijn (ghost images) */
         img {
             -webkit-user-drag: none;
             user-drag: none;
@@ -64,13 +57,14 @@
         .cursor-grab { cursor: grab; }
         .cursor-grabbing { cursor: grabbing; }
         
-        /* Zorg dat de drag-image op mobiel goed zichtbaar is */
+        /* CRUCIAAL VOOR MOBIEL: Zorg dat het sleep-plaatje geen events opvangt, 
+           zodat de 'drop' op het element eronder (de dropzone) terechtkomt */
         .dnd-poly-drag-image {
-            opacity: 1 !important;
+            opacity: 0.9 !important;
+            pointer-events: none !important;
             transform: scale(1.05);
         }
 
-        /* CRUCIAAL VOOR MOBIEL: Blokkeer browser-handling (scrollen/zoomen) op de sleepbare kaarten */
         .touch-none {
             touch-action: none;
         }
@@ -80,10 +74,9 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // We halen useState en useEffect uit het globale React object
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect } = React;
 
-        // Globale variabele als fallback voor mobiele dataTransfer issues
+        // Globale variabele als ultieme fallback voor data-overdracht
         let GLOBAL_DRAG_DATA = null;
 
         // --- Data ---
@@ -100,7 +93,6 @@
             { id: 10, name: 'Tom M.' }, 
         ];
 
-        // Afbeeldingen
         const studentImages = {
             1: 'images/1SophieV',
             2: 'images/1FrankyD',
@@ -487,7 +479,7 @@
         const AlgorithmTraitCard = ({ trait, onDragStart, isDraggable }) => (
             <div
                 draggable={isDraggable}
-                onDragStart={onDragStart}
+                onDragStart={isDraggable ? onDragStart : null}
                 // [AANGEPAST] touch-none zodat browser niet probeert te scrollen bij aanraking van dit element
                 className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group touch-none ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
             >
