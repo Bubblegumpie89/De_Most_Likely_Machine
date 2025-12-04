@@ -31,7 +31,6 @@
                 });
                 
                 // Fix voor iOS scroll gedrag tijdens drag
-                // We gebruiken passive: false om preventDefault toe te staan indien nodig
                 window.addEventListener('touchmove', function() {}, {passive: false});
             }
         });
@@ -609,19 +608,19 @@
                 // Nee, draggedTrait state is betrouwbaar voor de huidige actie. 
                 // Maar als we tussen lijsten slepen, moeten we het object misschien uit de source list halen.
                 
-                let traitObject = draggedTrait;
+                let traitObject = null;
+                let sourceCategory = null;
+                let isFromStack = false;
                 
                 // --- LOGICA AANGEPAST ---
                 
-                // 1. Zoek waar de kaart vandaan komt (Stack of een andere categorie)
-                let sourceCategory = null;
-                
                 // Check of het van de stapel komt (moet de bovenste zijn)
-                // Merk op: traitId komt uit event, currentTrait.id uit state.
-                const isFromStack = currentTrait && traitId === currentTrait.id;
-
+                if (currentTrait && currentTrait.id === traitId) {
+                    isFromStack = true;
+                    traitObject = currentTrait;
+                } 
                 // Check of het uit een bestaande categorie komt
-                if (!isFromStack) {
+                else {
                     for (const key of Object.keys(assignedTraits)) {
                         const found = assignedTraits[key].find(t => t.id === traitId);
                         if (found) {
