@@ -26,11 +26,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.MobileDragDrop) {
                 MobileDragDrop.polyfill({
-                    // Zorgt ervoor dat slepen soepeler verloopt op mobiel
-                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+                    // Zorgt ervoor dat de drag image meescrolt/beweegt
+                    dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+                    // [AANGEPAST] Houd 300ms vast om te slepen op mobiel (voorkomt conflict met scrollen)
+                    holdToDrag: 300 
                 });
                 
-                // Fix voor iOS scroll gedrag tijdens drag
+                // Fix voor iOS scroll gedrag
                 window.addEventListener('touchmove', function() {}, {passive: false});
             }
         });
@@ -39,8 +41,8 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Voorkomt stuiteren op iOS, maar laat scrollen toe */
             overscroll-behavior-y: none; 
-            /* Voorkomt selectie van tekst/afbeeldingen tijdens interactie */
             -webkit-user-select: none;
             user-select: none;
         }
@@ -48,15 +50,20 @@
         img {
             -webkit-user-drag: none;
             user-drag: none;
-            pointer-events: none; /* Standaard geen interactie */
+            pointer-events: none; 
         }
-        /* Specifieke interactieve elementen herstellen */
         button img, .card-img {
             pointer-events: auto;
         }
 
         .cursor-grab { cursor: grab; }
         .cursor-grabbing { cursor: grabbing; }
+        
+        /* Zorg dat de drag-image op mobiel goed zichtbaar is */
+        .dnd-poly-drag-image {
+            opacity: 1 !important;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-slate-800">
@@ -468,7 +475,7 @@
             <div
                 draggable={isDraggable}
                 onDragStart={isDraggable ? onDragStart : null}
-                className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing touch-none' : 'opacity-50 cursor-not-allowed'}`}
+                className={`w-[36rem] h-[22rem] max-w-full rounded-lg shadow-xl overflow-hidden relative group ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'opacity-50 cursor-not-allowed'}`}
             >
                 <img
                     src={traitImages[trait.id]}
@@ -522,7 +529,7 @@
             <div
                 draggable
                 onDragStart={onDragStart}
-                className="relative w-full h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200 touch-none"
+                className="relative w-full h-20 rounded-md shadow-sm overflow-hidden cursor-grab active:cursor-grabbing group border border-gray-200"
             >
                 <img
                     src={traitImages[trait.id]}
@@ -558,9 +565,14 @@
             const currentTrait = remainingTraits.length > 0 ? remainingTraits[remainingTraits.length - 1] : null;
 
             const handleDragStart = (trait) => (e) => {
-                e.dataTransfer.setData("traitId", trait.id);
-                e.dataTransfer.effectAllowed = "move";
+                // [AANGEPAST] Sla altijd op in state voor mobile/polyfill fallback
                 setDraggedTrait(trait);
+                
+                // Probeer dataTransfer te vullen voor desktop
+                if (e.dataTransfer) {
+                    e.dataTransfer.setData("traitId", trait.id);
+                    e.dataTransfer.effectAllowed = "move";
+                }
             };
             
             const handleDragOver = (e) => {
@@ -574,10 +586,15 @@
                         // Als de zone vol is, maar we slepen iets dat al in deze zone zit?
                         // Voor nu: als vol, geen drop indicator.
                         // We kunnen evt controleren of het gesleepte item al in de doelzone zit.
-                        const traitIdStr = e.dataTransfer.getData("traitId");
-                        // Fallback naar state als getData leeg is (gebeurt soms tijdens dragover)
-                        const traitId = traitIdStr ? parseInt(traitIdStr, 10) : draggedTrait?.id;
                         
+                        // [AANGEPAST] Probeer data op te halen met fallback naar state
+                        let traitId;
+                        if (e.dataTransfer) {
+                             const dtId = e.dataTransfer.getData("traitId");
+                             if (dtId) traitId = parseInt(dtId, 10);
+                        }
+                        if (!traitId && draggedTrait) traitId = draggedTrait.id;
+
                         const isAlreadyHere = traitId && assignedTraits[targetZone].some(t => t.id === traitId);
                         
                         if (isAlreadyHere) {
@@ -597,9 +614,17 @@
                 e.preventDefault();
                 setDragOverZone(null);  
                 
-                // Fallback to state if dataTransfer is empty (common on mobile/polyfills)
-                const traitIdStr = e.dataTransfer.getData("traitId");
-                const traitId = traitIdStr ? parseInt(traitIdStr, 10) : draggedTrait?.id;
+                // [AANGEPAST] Robuustere ID retrieval voor mobile/polyfill
+                let traitId;
+                if (e.dataTransfer) {
+                    const dtId = e.dataTransfer.getData("traitId");
+                    if (dtId) traitId = parseInt(dtId, 10);
+                }
+                // Fallback naar state als dataTransfer leeg is
+                if (!traitId && draggedTrait) {
+                    traitId = draggedTrait.id;
+                }
+
                 const targetAwardKey = e.currentTarget.dataset.awardKey;
 
                 if (!traitId || !targetAwardKey) return;
@@ -629,6 +654,11 @@
                             break;
                         }
                     }
+                }
+                
+                // Fallback: als we het object nog niet hebben, kijk in de state (voor de zekerheid)
+                if (!traitObject && draggedTrait && draggedTrait.id === traitId) {
+                    traitObject = draggedTrait;
                 }
 
                 if (!traitObject) return; // Zou niet mogen gebeuren
@@ -760,7 +790,7 @@
                 cursor-grab active:cursor-grabbing transition-colors duration-100 ease-in-out
                 ${isDragging ? 'opacity-50' : 'opacity-100'}
                 border-t-4 md:border-t-8 border-b-4 md:border-b-8 ${borderClass}
-                touch-none
+                
             `;
 
             return (
@@ -793,8 +823,12 @@
             const handleDragStart = (e) => {
                 const traitId = parseInt(e.currentTarget.dataset.traitId, 10);
                 setDraggedTraitId(traitId);
-                e.dataTransfer.setData("traitId", traitId);
-                e.dataTransfer.effectAllowed = "move";
+                
+                // [AANGEPAST] DataTransfer vullen voor desktop
+                if (e.dataTransfer) {
+                    e.dataTransfer.setData("traitId", traitId);
+                    e.dataTransfer.effectAllowed = "move";
+                }
             };
 
             const handleDragOver = (e) => {
@@ -802,7 +836,14 @@
                 const targetElement = e.currentTarget;
                 const targetTraitId = parseInt(targetElement.dataset.traitId, 10);
                 
-                if (!targetTraitId || targetTraitId === draggedTraitId) return;
+                // [AANGEPAST] Fallback naar state als dataTransfer leeg is
+                let currentDraggedId = draggedTraitId;
+                if (!currentDraggedId && e.dataTransfer) {
+                     const dtId = e.dataTransfer.getData("traitId");
+                     if (dtId) currentDraggedId = parseInt(dtId, 10);
+                }
+
+                if (!targetTraitId || targetTraitId === currentDraggedId) return;
 
                 const rect = targetElement.getBoundingClientRect();
                 const midY = rect.top + rect.height / 2;
@@ -820,11 +861,14 @@
             const handleDrop = (e) => {
                 e.preventDefault();
                 
-                // Fallback for polyfill
-                const traitIdStr = e.dataTransfer.getData("traitId");
-                const traitId = traitIdStr ? parseInt(traitIdStr, 10) : draggedTraitId;
+                // [AANGEPAST] Fallback naar state
+                let currentDraggedId = draggedTraitId;
+                if (!currentDraggedId && e.dataTransfer) {
+                     const dtId = e.dataTransfer.getData("traitId");
+                     if (dtId) currentDraggedId = parseInt(dtId, 10);
+                }
 
-                if (!dropIndicator.targetId || !traitId || dropIndicator.targetId === traitId) {
+                if (!dropIndicator.targetId || !currentDraggedId || dropIndicator.targetId === currentDraggedId) {
                     setDraggedTraitId(null);
                     setDropIndicator({ targetId: null, position: 'before' });
                     return;
@@ -832,7 +876,7 @@
 
                 const currentTraits = [...assignedTraits[selectedAward]];
                 
-                const draggedIndex = currentTraits.findIndex(t => t.id === traitId);
+                const draggedIndex = currentTraits.findIndex(t => t.id === currentDraggedId);
                 if (draggedIndex === -1) {
                     setDraggedTraitId(null);
                     setDropIndicator({ targetId: null, position: 'before' });
